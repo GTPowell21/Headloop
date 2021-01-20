@@ -14,7 +14,8 @@ primer and an offset tag is added to the antisense primer.
 
 For further details of headloop suppression PCR, see the preprint at bioRxiv:
 
-                  https://doi.org/10.1101/2020.06.04.133462
+    Kroll, F., Powell, G.T. et al (2021) eLife 10:e59683, doi: 10.7554/eLife.59683
+    https://doi.org/10.7554/eLife.59683
 
 This package uses 'melting' from Erik Clarke [https://github.com/eclarke/melt] to 
 calculate Tm of primers and headloop tags, and Seq from Biopython 
@@ -27,31 +28,42 @@ To use this package, the user needs to provide four variables:
     orientation - is the guide in the same strand as the 'sense' primer or 'antisense' 
                   primer?
 
-Example:
-    headloop.design('ATCG', 'CGAT', 'AGCTCTGT...TGG', 'sense')
+Example (tbx16_AA):
+  design('CTGGTCCAGTGCGTTATTGG', 'AGCCAAATGCTTCTTGCTCTTTT', 
+           'CTACAGGACGTACCTGCACCCGGATTCACCAGCGCCCG', 'antisense')
     
 Returns:
-    'HL+ATCG', 'HL+CGAT', sense_warning?, antisense_warning?
+    Two primers as SeqRecord objects, with comments on Tm matching in the description
+    
+    CCTGCACCCGGATTCACCAGCTGGTCCAGTGCGTTATTGG
+    WARNING: Could not optimise sense headloop tag (Tm difference > 3°C) 
+    
+    GGTGCAGGTACGTCCTGTAGAGCCAAATGCTTCTTGCTCTTTT
+    Tm difference < 3°C
     
     (Gives a warning flag if the Tm difference between the headloop tag and the 
      base primer is calculated to be > 3C)
     
 """
 
-from Bio import Seq
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 import melting #library from Erik Clarke's GitHub repository [https://github.com/eclarke/melt]
 
 def design(sense_oligo, antisense_oligo, guide_context, orientation):
 
     #identify strand for Tm comparison and tagging   
-    orient_error = 'Orientation not correctly specified'
+    orient_error = 'Orientation not correctly specified.\n'
     
     if orientation == 'sense':
-        switch = -1
+        i = 0
+        j = 1
     elif orientation == 'antisense':
-        switch = 0
+        i = 1
+        j = 0
     else:
-        return orient_error
+        print(orient_error)
+        return
     
     #convert sequences to Seq objects for manipulation    
     sense = Seq(sense_oligo)
@@ -63,14 +75,15 @@ def design(sense_oligo, antisense_oligo, guide_context, orientation):
     #check guide sequence + context is big enough for design
     size_error = 'Guide and context is not big enough for design'
     
-    if (len(context.seq) + 1) < 35:
-        return size_error
+    if len(context) < 35:
+        print(size_error)
+        return
     
     #calculate Tm for primers
     MT = []
 
     for primer in primers:
-        temptm = melting.temp(primer.seq, DNA_c = 1000, Mg_c = 1.5, dNTPs_c = 0.2)
+        temptm = melting.temp(primer, DNA_c = 1000, Mg_c = 1.5, dNTPs_c = 0.2)
         MT.append(temptm)
     
     #design headloop tags
@@ -85,8 +98,8 @@ def design(sense_oligo, antisense_oligo, guide_context, orientation):
         #create list of possible reverse complement tags
         temp_rc = context[frame:(frame + 20)]    #extract sequence
         rc = temp_rc.reverse_complement()    #reverse complement temp_rc
-        rc_temp_tm = melting.temp(rc.seq, DNA_c = 1000, Mg_c = 1.5, dNTPs_c = 0.2)     #calculate Tm melting method
-        rc_temp_diff = abs(MT[(switch + 1)] - rc_temp_tm)  #calculate Tm difference with sense primer
+        rc_temp_tm = melting.temp(rc, DNA_c = 1000, Mg_c = 1.5, dNTPs_c = 0.2)     #calculate Tm melting method
+        rc_temp_diff = abs(MT[i] - rc_temp_tm)  #calculate Tm difference with sense primer
         if rc_temp_diff < 3:
             rc_flag = 0
         else:
@@ -96,8 +109,8 @@ def design(sense_oligo, antisense_oligo, guide_context, orientation):
 
         #create list of possible offset tags
         offset = context[(frame + 12):(frame + 32)]     #extract offset sequence
-        off_temp_tm = melting.temp(offset.seq, DNA_c = 1000, Mg_c = 1.5, dNTPs_c = 0.2)     #calculate Tm melting method
-        off_temp_diff = abs(MT[(switch + 2)] - off_temp_tm)  #calculate Tm difference with antisense primer
+        off_temp_tm = melting.temp(offset, DNA_c = 1000, Mg_c = 1.5, dNTPs_c = 0.2)     #calculate Tm melting method
+        off_temp_diff = abs(MT[j] - off_temp_tm)  #calculate Tm difference with antisense primer
         if off_temp_diff <3:
             off_flag = 0
         else:
@@ -112,30 +125,60 @@ def design(sense_oligo, antisense_oligo, guide_context, orientation):
     
     #concatenate headloop tags with correct primer, depending on strand orientation
     if orientation == 'sense':
-        sense_hl = master_rc[0][0] + sense #create headloop sense primer sequence
-        antisense_hl = master_offset[0][0] + antisense #create headloop antisense primer sequence
+        temp_sense_hl = master_rc[0][0] + sense #create headloop sense primer sequence
+        temp_antisense_hl = master_offset[0][0] + antisense #create headloop antisense primer sequence
         
         #formats seq records
-        sense_hl.id = 'Sense HL'
+        sense_hl = SeqRecord(temp_sense_hl, id = 'Sense HL')
         if master_rc[0][4] == 1:
             sense_hl.description = 'WARNING: Could not optimise sense headloop tag (Tm difference > 3\u00b0C)'
+        else:
+            sense_hl.description = 'Tm difference < 3\u00b0C'
 
-        antisense_hl.id = 'Antisense HL'
+        antisense_hl = SeqRecord(temp_antisense_hl, id = 'Antisense HL')
         if master_offset[0][4] == 1:
             antisense_hl.description = 'WARNING: Could not optimise antisense headloop tag (Tm difference > 3\u00b0C)'
+        else:
+            antisense_hl.description = 'Tm difference < 3\u00b0C'
+
             
     else:
-        antisense_hl = master_rc[0][0] + antisense #create headloop antisense primer sequence
-        sense_hl = master_offset[0][0] + sense
+        temp_antisense_hl = master_rc[0][0] + antisense #create headloop antisense primer sequence
+        temp_sense_hl = master_offset[0][0] + sense
 
         #formats seq records
-        sense_hl.id = 'Sense HL'
+        sense_hl = SeqRecord(temp_sense_hl, id = 'Sense HL')
         if master_offset[0][4] == 1:
             sense_hl.description = 'WARNING: Could not optimise sense headloop tag (Tm difference > 3\u00b0C)'
-
-        antisense_hl.id = 'Antisense HL'
+        else:
+            sense_hl.description = 'Tm difference < 3\u00b0C'
+            
+        antisense_hl = SeqRecord(temp_antisense_hl, id = 'Antisense HL')
         if master_rc[0][4] == 1:
             antisense_hl.description = 'WARNING: Could not optimise antisense headloop tag (Tm difference > 3\u00b0C)'
-
+        else:
+            antisense_hl.description = 'Tm difference < 3\u00b0C'
+            
     return (sense_hl, antisense_hl)
 
+##Example from the paper: tbx16_AA
+
+#Forward primer
+tbx16_AA_F = 'CTGGTCCAGTGCGTTATTGG'
+
+#Reverse primer
+tbx16_AA_R = 'AGCCAAATGCTTCTTGCTCTTTT'
+
+#Guide sequence and PAM, plus 15 bp downstream sequence
+tbx16_AA_guide = 'CTACAGGACGTACCTGCACCCGGATTCACCAGCGCCCG'
+
+#Orientation of guide with respect to forward primer: same strand = sense, opposite strand = 'antisense'
+tbx16_AA_guide_orientation = 'antisense'
+
+#Run the function
+output = design(tbx16_AA_F, tbx16_AA_R, tbx16_AA_guide, tbx16_AA_guide_orientation)
+
+#Output of the function: note that 'design' returns two primers as SeqRecord objects, with comments on how closely matched
+#the predicated annealing temperatures are. Only one of those primers should be used, to be determined by testing.
+#In this individual case, the antisense headloop primer was used for HL-PCR.
+print('Sense headloop primer:', output[0].seq, '\n', output[0].description, '\n', 'Antisense headloop primer:', output[1].seq, '\n', output[1].description)
