@@ -41,6 +41,7 @@ To use this package, the user needs to provide four variables:
                   primer?
 
 Example (tbx16_AA):
+
     design('CTGGTCCAGTGCGTTATTGG', 'AGCCAAATGCTTCTTGCTCTTTT', 
            'CTACAGGACGTACCTGCACCCGGATTCACCAGCGCCCG', 'antisense')
     
