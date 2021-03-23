@@ -35,8 +35,8 @@ For further details of headloop suppression PCR, see the paper at eLife:
     pip install headloop
 
 This package uses 'melting' from Erik Clarke [https://github.com/eclarke/melt] to 
-calculate Tm of primers and headloop tags, and Seq from Biopython 
-[https://biopython.org/wiki/Seq] for reverse complementation.
+calculate Tm of primers and headloop tags, and Seq & SeqRecord from Biopython 
+[https://biopython.org/wiki/Seq] for reverse complementation and object input/output.
 
 ## Usage
 To use this package, the user needs to provide four variables:
