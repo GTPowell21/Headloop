@@ -3,6 +3,7 @@ Package for designing headloop primers to use in headloop suppression PCR to
 suppress amplification of a known haplotype.
 Copyright (C) July 2020, Gareth T. Powell
 
+## License
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+## Description
 Function designs tags from guide sequence provided by the user, with frameshifting 
 to minimise Tm differences between the tags and the PCR primers, then adds the 'best' 
 tags to the correct PCR primer provided by the user, depending upon strand orientation 
@@ -29,10 +30,15 @@ For further details of headloop suppression PCR, see the paper at eLife:
     Kroll, F., Powell, G.T. et al (2021) eLife 10:e59683, doi: 10.7554/eLife.59683
     https://doi.org/10.7554/eLife.59683
 
+## Installation
+
+    pip install headloop
+
 This package uses 'melting' from Erik Clarke [https://github.com/eclarke/melt] to 
 calculate Tm of primers and headloop tags, and Seq from Biopython 
 [https://biopython.org/wiki/Seq] for reverse complementation.
 
+## Usage
 To use this package, the user needs to provide four variables:
     
     sense_oligo     #string containing the sense primer
@@ -42,6 +48,8 @@ To use this package, the user needs to provide four variables:
 
 Example (tbx16_AA):
 
+    from headloop.designer import design
+    
     design('CTGGTCCAGTGCGTTATTGG', 'AGCCAAATGCTTCTTGCTCTTTT', 
            'CTACAGGACGTACCTGCACCCGGATTCACCAGCGCCCG', 'antisense')
     
