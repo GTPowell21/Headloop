@@ -41,8 +41,8 @@ calculate Tm of primers and headloop tags, and Seq & SeqRecord from Biopython
 ## Usage
 To use this package, the user needs to provide four variables:
     
-    sense_oligo     #string containing the sense primer
-    antisense_oligo #string containing the antisense primer
+    sense_oligo     #string containing the forward primer
+    antisense_oligo #string containing the reverse primer
     guide_context   #string containing guide sequence and >= 15 bp forward context
     orientation     #is the guide in the same strand as the 'sense' primer or 'antisense' primer?
 
