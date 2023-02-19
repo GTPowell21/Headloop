@@ -56,11 +56,14 @@ Example (tbx16_AA):
 Returns:
     Two primers as SeqRecord objects, with comments on Tm matching in the description
     
-    CCTGCACCCGGATTCACCAGCTGGTCCAGTGCGTTATTGG
+    [CCTGCACCCGGATTCACCAG]CTGGTCCAGTGCGTTATTGG
     WARNING: Could not optimise forward headloop tag (Tm difference > 3°C) 
     
-    GGTGCAGGTACGTCCTGTAGAGCCAAATGCTTCTTGCTCTTTT
+    [GGTGCAGGTACGTCCTGTAG]AGCCAAATGCTTCTTGCTCTTTT
     Tm difference < 3°C
     
-    (Gives a warning flag if the Tm difference between the headloop tag and the 
-     base primer is calculated to be > 3C)
+    Note:
+     Gives a warning flag if the Tm difference between the headloop tag and the 
+     base primer is calculated to be > 3C
+     Headloop tag sequences indicated with brackets in this example, not included in
+     output of script
